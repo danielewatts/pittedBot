@@ -84,7 +84,7 @@ class Resort:
         desiredPeriods = TEST_PERIODS
         #for each zone generate a message
         for zone in self.zoneUrlMap.keys():
-            msg += "Area " + self.name +" ZONE: " + str(zone) + "\n" 
+            msg += "Area: " + self.name +", ZONE: " + str(zone) + "\n" 
             forecast = self.periodForeCastData[zone]
             for i in range(0,desiredPeriods):
                 periodName,descript = forecast[i] #returns a tuple (periodName, detailedDescript)
