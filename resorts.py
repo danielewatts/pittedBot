@@ -76,19 +76,13 @@ class Resort:
         else: #block here only runs if an exception is not thrown
             self.validNOAA = True
             totalJsonData = json.load(req)
-            
-        # with urllib.request.urlopen(url) as url:
-        #         totalJsonData = json.loads(url.read().decode())
-        
-        if self.validNOAA:
-            #iterate through period blocks and extract name, detailedForecast descript
             forecastingPeriods = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
             for period in forecastingPeriods:
                 nameOfPeriod = period[self.NAMES_TAG]
                 detailedForecastDescript = period[self.DETAILED_FORECAST_TAG]
                 #add this data to the zonePeriod array 
                 zonePeriodData.append((nameOfPeriod,detailedForecastDescript))
-        
+                
         return zonePeriodData
     
 
