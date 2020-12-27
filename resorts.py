@@ -24,6 +24,7 @@ class Resort:
     DETAILED_FORECAST_TAG = "detailedForecast"
     PERIODS_TAG = "periods"
     NOAA_ERROR_MESSAGE = "NOAA failed :-( try entering prev request again"
+    HTTP_REQ_TIMELIMIT = 3
 
     def __init__(self,resortName):
         self.name = resortName
@@ -69,7 +70,7 @@ class Resort:
         #urlib might throw urllib.error.HTTPError
         #need to handle this so it doesn't bring server down
         try:
-            req = urllib.request.urlopen(url)
+            req = urllib.request.urlopen(url,timeout=3)
         except urllib.error.HTTPError:
             self.validNOAA = False
             print("http error detected")
@@ -107,7 +108,7 @@ class Resort:
 
             return msg
         else:
-            return self.NOAA_ERROR_MESSAGE          
+            return self.NOAA_ERROR_MESSAGE + self.HTTP_REQ_TIMELIMIT    
 
 
 
