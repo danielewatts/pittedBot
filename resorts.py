@@ -71,6 +71,7 @@ class Resort:
         try:
             req = urllib.request.urlopen(url)
         except urllib.error.HTTPError:
+            self.validNOAA = False
             print("http error detected")
         else: #block here only runs if an exception is not thrown
             self.validNOAA = True

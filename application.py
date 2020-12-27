@@ -17,19 +17,22 @@ resortMapping = {
 def getIntendedResort(userString):
     return Resort(resortMapping[userString])
 
+#is input valid, ie is it in the resort mapping
 def validateInput(incomingMsg):
-    if incomingMsg in resortMapping:
-        return True
-    else:
-        return False
+    return (incomingMsg in resortMapping)
 
+#gets rid of all spaces, returns first contigous string element
+def cleanedBodySMS(sms):
+    sms = sms.lower()
+    sms = sms.split()
+    return sms[0]
 
 @app.route("/sms",methods = ['GET','POST'])
 def smsReply():
-    ##get incoming text msg
+    ##get incoming text msg, clean up
 
     body = request.values.get('Body',None)
-    body = body.lower()
+    body = cleanedBodySMS(body)
     resp = MessagingResponse()
     skiResort = None
     #check if incoming msg is valid
