@@ -70,7 +70,7 @@ class Resort:
         #need to handle this so it doesn't bring server down
         try:
             req = urllib.request.urlopen(url)
-        except:
+        except urllib.error.HTTPError:
             print("http error detected")
         else: #block here only runs if an exception is not thrown
             self.validNOAA = True
