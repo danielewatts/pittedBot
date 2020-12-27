@@ -23,7 +23,7 @@ class Resort:
     NAMES_TAG = "name"
     DETAILED_FORECAST_TAG = "detailedForecast"
     PERIODS_TAG = "periods"
-
+    NOAA_ERROR_MESSAGE = "NOAA failed :-( try entering prev request again"
 
     def __init__(self,resortName):
         self.name = resortName
@@ -113,7 +113,7 @@ class Resort:
 
             return msg
         else:
-            return "NOAA failed"            
+            return self.NOAA_ERROR_MESSAGE          
 
 
 

@@ -39,7 +39,7 @@ def smsReply():
     if validateInput(body):
         skiResort = getIntendedResort(body)
     else:
-        errorMsg = "invalid, please enter a 3 character resort code ie, \n {0}".format(list(resortMapping.keys()))
+        errorMsg = "invalid, please ONLY enter a 3 character resort code, ie \n {0}".format(list(resortMapping.keys()))
         resp.message(errorMsg)
         return str(resp)
 
