@@ -27,10 +27,13 @@ class Resort:
 
     def __init__(self,resortName):
         self.name = resortName
+        self.validNOAA = False
         self.zoneUrlMap = self.getAreaDataFromJSON(resortName)
         #initialize periodForeCast dict
         self.periodForeCastData = dict(zip([zone for zone in self.zoneUrlMap.keys()],[ [] for x in self.zoneUrlMap.keys()]))
         self.setPeriodForeCastData()
+        
+        #boolean to see if noaa forecast api retrieval was successful, only for testing purposes
 
   
     #method for getting the zones of a resort , most only have 1, but some may have multiple desired zones for forecasts
@@ -63,38 +66,53 @@ class Resort:
         zonePeriodData = []
         url = self.zoneUrlMap[zoneName]
         totalJsonData = None
-        with urllib.request.urlopen(url) as url:
-                totalJsonData = json.loads(url.read().decode())
+        #urlib might throw urllib.error.HTTPError
+        #need to handle this so it doesn't bring server down
+        try:
+            req = urllib.request.urlopen(url)
+        except:
+            print("http error detected")
+        else: #block here only runs if an exception is not thrown
+            self.validNOAA = True
+            totalJsonData = json.load(req)
+            
+        # with urllib.request.urlopen(url) as url:
+        #         totalJsonData = json.loads(url.read().decode())
         
-        #iterate through period blocks and extract name, detailedForecast descript
-        forecastingPeriods = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
-        for period in forecastingPeriods:
-            nameOfPeriod = period[self.NAMES_TAG]
-            detailedForecastDescript = period[self.DETAILED_FORECAST_TAG]
-            #add this data to the zonePeriod array 
-            zonePeriodData.append((nameOfPeriod,detailedForecastDescript))
-
+        if self.validNOAA:
+            #iterate through period blocks and extract name, detailedForecast descript
+            forecastingPeriods = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
+            for period in forecastingPeriods:
+                nameOfPeriod = period[self.NAMES_TAG]
+                detailedForecastDescript = period[self.DETAILED_FORECAST_TAG]
+                #add this data to the zonePeriod array 
+                zonePeriodData.append((nameOfPeriod,detailedForecastDescript))
+        
         return zonePeriodData
+    
 
     #method for generating the forecast summary msg
     def getWeatherMsg(self):
-        msg = ""
-        desiredPeriods = 4
-        TEST_PERIODS = 1
-        desiredPeriods = TEST_PERIODS
-        #for each zone generate a message
-        for zone in self.zoneUrlMap.keys():
-            msg += "Area: " + self.name +", ZONE: " + str(zone) + "\n" 
-            forecast = self.periodForeCastData[zone]
-            for i in range(0,desiredPeriods):
-                periodName,descript = forecast[i] #returns a tuple (periodName, detailedDescript)
-                dayMsg = periodName + " : " + descript
-                msg += "" + dayMsg + "\n"
-            #add spacing between zone summaries if more than one zone
-            if len(self.zoneUrlMap.keys())>1:
-                msg+="\n"
+        if self.validNOAA:
+            msg = ""
+            desiredPeriods = 4
+            TEST_PERIODS = 1
+            desiredPeriods = TEST_PERIODS
+            #for each zone generate a message
+            for zone in self.zoneUrlMap.keys():
+                msg += "Area: " + self.name +", ZONE: " + str(zone) + "\n" 
+                forecast = self.periodForeCastData[zone]
+                for i in range(0,desiredPeriods):
+                    periodName,descript = forecast[i] #returns a tuple (periodName, detailedDescript)
+                    dayMsg = periodName + " : " + descript
+                    msg += "" + dayMsg + "\n"
+                #add spacing between zone summaries if more than one zone
+                if len(self.zoneUrlMap.keys())>1:
+                    msg+="\n"
 
-        return msg            
+            return msg
+        else:
+            return "NOAA failed"            
 
 
 
