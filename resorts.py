@@ -8,7 +8,16 @@ Upon init all data will be populated, this will result in calling a utility clas
 
 import json
 import urllib.request
+#importing logging and azure logging tools to detect possible http errors and report them to azure logging tools
+import logging 
+from opencensus.ext.azure.log_exporter import AzureLogHandler
 class Resort:
+    #class instance logger for debugging purposes
+    INSTRUMENTATION_KEY = '90ee405e-6fad-44bf-9e49-74be2f0378ba'
+    logger = logging.getLogger(__name__)
+    logger.addHandler(
+        AzureLogHandler(connection_string = INSTRUMENTATION_KEY)
+    )
     #suboptimal mapping from jason to name 
     jsonResortIndexMap ={
         "alpental":0,
