@@ -36,13 +36,13 @@ class Resort:
     HTTP_REQ_TIMELIMIT = 3
 
     def __init__(self,resortName):
+        self.logger("Entered resort constructer")
         self.name = resortName
         self.validNOAA = False
         self.zoneUrlMap = self.getAreaDataFromJSON(resortName)
         #initialize periodForeCast dict
         self.periodForeCastData = dict(zip([zone for zone in self.zoneUrlMap.keys()],[ [] for x in self.zoneUrlMap.keys()]))
         self.setPeriodForeCastData()
-        
         #boolean to see if noaa forecast api retrieval was successful, only for testing purposes
 
   
@@ -56,11 +56,13 @@ class Resort:
         # returns JSON object as  
         # a dictionary 
         data = json.load(resortsJsonFile) 
+        self.logger.warning("opened up json file")
         areaInfo = data[resortIndex][self.AREAS_TAG]
         for subAreaDict in areaInfo:
             #populate zone array with name and corresponding urls
             zoneNameApiMap[subAreaDict['name']] = subAreaDict['url']
         #return the zone array to be assigned to area array in constructor
+        self.logger.warning("returning url dict from local json")
         return zoneNameApiMap
     
 
@@ -81,6 +83,7 @@ class Resort:
         try:
             req = urllib.request.urlopen(url,timeout=3)
         except urllib.error.HTTPError:
+            self.logger.warning("in urlib http error block")
             self.validNOAA = False
             print("http error detected")
         else: #block here only runs if an exception is not thrown
@@ -92,6 +95,8 @@ class Resort:
                 detailedForecastDescript = period[self.DETAILED_FORECAST_TAG]
                 #add this data to the zonePeriod array 
                 zonePeriodData.append((nameOfPeriod,detailedForecastDescript))
+            
+            self.logger.warning("loaded up zone period data")
                 
         return zonePeriodData
     
@@ -115,8 +120,10 @@ class Resort:
                 if len(self.zoneUrlMap.keys())>1:
                     msg+="\n"
 
+            self.logger.warning("returning forecast msg")
             return msg
         else:
+            self.logger.warning("returning error msg from getWeatherMsg method")
             return self.NOAA_ERROR_MESSAGE + self.HTTP_REQ_TIMELIMIT    
 
 

@@ -2,6 +2,14 @@ from flask import Flask,request,redirect
 from resorts import Resort
 from twilio.twiml.messaging_response import MessagingResponse
 import os
+import logging 
+from opencensus.ext.azure.log_exporter import AzureLogHandler
+
+INSTRUMENTATION_KEY = '90ee405e-6fad-44bf-9e49-74be2f0378ba'
+logger = logging.getLogger(__name__)
+logger.addHandler(
+    AzureLogHandler(connection_string = INSTRUMENTATION_KEY)
+)
 
 app = Flask(__name__)
 # a mapping to be used for incoming text messages to the correct names of the resorts
@@ -30,14 +38,19 @@ def cleanedBodySMS(sms):
 @app.route("/sms",methods = ['GET','POST'])
 def smsReply():
     ##get incoming text msg, clean up
+    logger.warning("Entered sms reply")
 
     body = request.values.get('Body',None)
     body = cleanedBodySMS(body)
+
+    logger.warning("cleaned up and stored body of sms")
+
     resp = MessagingResponse()
     skiResort = None
     #check if incoming msg is valid
     if validateInput(body):
         skiResort = getIntendedResort(body)
+        logger.warning("created my resort obj")
     else:
         errorMsg = "invalid, please ONLY enter a 3 character resort code, ie \n {0}".format(list(resortMapping.keys()))
         resp.message(errorMsg)
@@ -46,7 +59,8 @@ def smsReply():
     #we have a valid ski resort, return weather data
     resortWeather = skiResort.getWeatherMsg()
     resp.message(resortWeather)
-
+    
+    logger.warning("about to return sms to twillio ?")
     return str(resp)
 
 if __name__ == '__main__':
