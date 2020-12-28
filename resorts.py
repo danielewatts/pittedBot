@@ -7,16 +7,16 @@ Upon init all data will be populated, this will result in calling a utility clas
 """
 
 import json
-import urllib.request
+import urllib.request,socket #importing socket to handle socket timeouts 
 #importing logging and azure logging tools to detect possible http errors and report them to azure logging tools
 import logging 
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 class Resort:
     #class instance logger for debugging purposes
-    INSTRUMENTATION_KEY = '90ee405e-6fad-44bf-9e49-74be2f0378ba'
+    CONNECTION_STRING = 'InstrumentationKey=5143d3c6-3d1e-444f-a65d-7aac7c370e32;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/'
     logger = logging.getLogger(__name__)
     logger.addHandler(
-        AzureLogHandler(connection_string = INSTRUMENTATION_KEY)
+        AzureLogHandler(connection_string = CONNECTION_STRING)
     )
     #suboptimal mapping from jason to name 
     jsonResortIndexMap ={
@@ -36,7 +36,7 @@ class Resort:
     HTTP_REQ_TIMELIMIT = 3
 
     def __init__(self,resortName):
-        self.logger("Entered resort constructer")
+        self.logger.warning("Entered resort constructer")
         self.name = resortName
         self.validNOAA = False
         self.zoneUrlMap = self.getAreaDataFromJSON(resortName)
@@ -86,6 +86,9 @@ class Resort:
             self.logger.warning("in urlib http error block")
             self.validNOAA = False
             print("http error detected")
+        except socket.timeout:
+            self.validNOAA = False
+            self.logger.warning("Socket TIMED OUT !!")
         else: #block here only runs if an exception is not thrown
             self.validNOAA = True
             totalJsonData = json.load(req)
@@ -124,7 +127,7 @@ class Resort:
             return msg
         else:
             self.logger.warning("returning error msg from getWeatherMsg method")
-            return self.NOAA_ERROR_MESSAGE + self.HTTP_REQ_TIMELIMIT    
+            return self.NOAA_ERROR_MESSAGE    
 
 
 

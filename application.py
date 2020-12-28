@@ -5,10 +5,10 @@ import os
 import logging 
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 
-INSTRUMENTATION_KEY = '90ee405e-6fad-44bf-9e49-74be2f0378ba'
+CONNECTION_STRING = 'InstrumentationKey=5143d3c6-3d1e-444f-a65d-7aac7c370e32;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/'
 logger = logging.getLogger(__name__)
 logger.addHandler(
-    AzureLogHandler(connection_string = INSTRUMENTATION_KEY)
+    AzureLogHandler(connection_string = CONNECTION_STRING)
 )
 
 app = Flask(__name__)
@@ -59,7 +59,7 @@ def smsReply():
     #we have a valid ski resort, return weather data
     resortWeather = skiResort.getWeatherMsg()
     resp.message(resortWeather)
-    
+
     logger.warning("about to return sms to twillio ?")
     return str(resp)
 
