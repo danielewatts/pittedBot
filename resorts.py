@@ -6,7 +6,7 @@ to fulfill information requests made by the user
 Upon init all data will be populated, this will result in calling a utility class to retrieve info from the json file ?.. perhaps
 """
 
-import json
+import json,re
 import urllib.request,socket #importing socket to handle socket timeouts 
 #importing logging and azure logging tools to detect possible http errors and report them to azure logging tools
 import logging 
@@ -27,6 +27,8 @@ class Resort:
         "stevens":4
         }
     #keys for json extraction, to avoid errors when typing
+    TEMPERATURE_TAG = 'temperature'
+    SHORT_FORECAST_TAG = 'shortForecast'
     AREAS_TAG = "areas"
     PROPERTIES_TAG = "properties"
     NAMES_TAG = "name"
@@ -38,6 +40,7 @@ class Resort:
     def __init__(self,resortName):
         self.logger.warning("Entered resort constructer")
         self.name = resortName
+        self.forecastPeriods = None
         self.validNOAA = False
         self.zoneUrlMap = self.getAreaDataFromJSON(resortName)
         #initialize periodForeCast dict
@@ -92,8 +95,9 @@ class Resort:
         else: #block here only runs if an exception is not thrown
             self.validNOAA = True
             totalJsonData = json.load(req)
-            forecastingPeriods = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
-            for period in forecastingPeriods:
+            # forecastingPeriods = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
+            self.forecastPeriods = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
+            for period in self.forecastPeriods:
                 nameOfPeriod = period[self.NAMES_TAG]
                 detailedForecastDescript = period[self.DETAILED_FORECAST_TAG]
                 #add this data to the zonePeriod array 
@@ -129,9 +133,41 @@ class Resort:
             self.logger.warning("returning error msg from getWeatherMsg method")
             return self.NOAA_ERROR_MESSAGE    
 
+    def getMultiPeriodMsg(self,desiredPeriods):
+        if self.validNOAA:
+            msg = ''
+            for zone in self.zoneUrlMap.keys():
+                msg += "Area: " + self.name +", ZONE: " + str(zone) + "\n" 
+                forecast = self.periodForeCastData[zone]
+                for i in range(0,desiredPeriods):
+                    currPeriod = self.forecastPeriods[i]
+                    periodName = forecast[i][0] #returns a tuple (periodName, detailedDescript)
+                    periodTemp = currPeriod[self.TEMPERATURE_TAG]
+                    periodShortForecast = currPeriod[self.SHORT_FORECAST_TAG]
+                    periodSnowAccumulation = self.getPeriodSnowAccum()
+                    dayMsg = "{}: {}F, {}, {}".format(periodName,periodTemp,periodShortForecast,periodSnowAccumulation)
+                    msg += "" + dayMsg + "\n"
+                #add spacing between zone summaries if more than one zone
+                if len(self.zoneUrlMap.keys())>1:
+                    msg+="\n"
 
+            self.logger.warning("returning multiDay forecast from multiDay")
+            return msg
+        else:
+            self.logger.warning("returning error msg from getMultiPeriodMsg")
+            return self.NOAA_ERROR_MESSAGE 
+      
 
+    def getPeriodShortForecast(self,periodIdx):
+        return self
+        pass
 
+    def getPeriodSnowAccum(self,period):
+        keyWords = set(period[])
+        pass
+
+    def getPeriodTemp(self):
+        pass
    
 
 

@@ -57,7 +57,8 @@ def smsReply():
         return str(resp)
 
     #we have a valid ski resort, return weather data
-    resortWeather = skiResort.getWeatherMsg()
+    # resortWeather = skiResort.getWeatherMsg()
+    resortWeather = skiResort.getMultiPeriodMsg(3)
     resp.message(resortWeather)
 
     logger.warning("about to return sms to twillio ?")
