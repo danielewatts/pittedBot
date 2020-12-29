@@ -66,8 +66,8 @@ from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 
 def localTest():
-    skiArea = Resort("alpental")
-    print(skiArea.getMultiPeriodMsg(4))
+    skiArea = Resort("baker")
+    print(skiArea.getMultiPeriodMsg(3))
     print("-----------------")
 
 if __name__ == '__main__':

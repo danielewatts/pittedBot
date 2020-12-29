@@ -11,6 +11,7 @@ import urllib.request,socket #importing socket to handle socket timeouts
 #importing logging and azure logging tools to detect possible http errors and report them to azure logging tools
 import logging 
 from opencensus.ext.azure.log_exporter import AzureLogHandler
+from collections import OrderedDict
 class Resort:
     #class instance logger for debugging purposes
     CONNECTION_STRING = 'InstrumentationKey=5143d3c6-3d1e-444f-a65d-7aac7c370e32;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/'
@@ -26,6 +27,14 @@ class Resort:
         "white-pass":3,
         "stevens":4
         }
+    elevationMapping = {
+        "alpental":("4776","3087"),
+        "crystal":("5233",""),
+        "baker":("3901",""),
+        "white-pass":("5827",""),
+        "stevens":("4049","")
+    }
+
     #keys for json extraction, to avoid errors when typing
     TEMPERATURE_TAG = 'temperature'
     SHORT_FORECAST_TAG = 'shortForecast'
@@ -40,7 +49,7 @@ class Resort:
     def __init__(self,resortName):
         self.logger.warning("Entered resort constructer")
         self.name = resortName
-        self.forecastPeriods = None
+        self.forecastPeriods = []
         self.validNOAA = False
         self.zoneUrlMap = self.getAreaDataFromJSON(resortName)
         #initialize periodForeCast dict
@@ -52,7 +61,7 @@ class Resort:
     #method for getting the zones of a resort , most only have 1, but some may have multiple desired zones for forecasts
     # fills dict {zone:forecastURL}
     def getAreaDataFromJSON(self,resortName):
-        zoneNameApiMap = {}
+        zoneNameApiMap = OrderedDict()
         resortIndex = self.jsonResortIndexMap[resortName]
         # Opening JSON file 
         resortsJsonFile = open('resorts.json')
@@ -95,9 +104,9 @@ class Resort:
         else: #block here only runs if an exception is not thrown
             self.validNOAA = True
             totalJsonData = json.load(req)
-            # forecastingPeriods = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
-            self.forecastPeriods = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
-            for period in self.forecastPeriods:
+            forecastingPeriod = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
+            self.forecastPeriods.append(forecastingPeriod) 
+            for period in forecastingPeriod:
                 nameOfPeriod = period[self.NAMES_TAG]
                 detailedForecastDescript = period[self.DETAILED_FORECAST_TAG]
                 #add this data to the zonePeriod array 
@@ -135,12 +144,6 @@ class Resort:
         
     def getPeriodSnowAccum(self,period):
         detailedDescript = period[self.DETAILED_FORECAST_TAG]
-        # details = detailedDescript.split(".")
-        # for detail in details:
-        #     temp = detail
-        #     if temp.strip().startswith("New"):
-        #         return detail
-
         try:
             idx = detailedDescript.index("New")
             return detailedDescript[idx::]
@@ -153,20 +156,24 @@ class Resort:
     def getMultiPeriodMsg(self,desiredPeriods):
         if self.validNOAA:
             msg = ''
+            zoneIdx = 0
             for zone in self.zoneUrlMap.keys():
-                msg += "Area: " + self.name +", ZONE: " + str(zone) + "\n" 
+                # msg += "Area: " + self.name +", ZONE: " + str(zone) + elevation + "\n" 
+                elevation = self.elevationMapping[self.name][zoneIdx]
+                msg+= "Area: {}, Zone: {} at {}ft \n".format(self.name,str(zone),elevation)
                 forecast = self.periodForeCastData[zone]
                 for i in range(0,desiredPeriods):
-                    currPeriod = self.forecastPeriods[i]
+                    currPeriod = self.forecastPeriods[zoneIdx][i]
                     periodName = forecast[i][0] #returns a tuple (periodName, detailedDescript)
-                    periodTemp = currPeriod[self.TEMPERATURE_TAG]
-                    periodShortForecast = currPeriod[self.SHORT_FORECAST_TAG]
+                    periodTemp,periodShortForecast = currPeriod[self.TEMPERATURE_TAG],currPeriod[self.SHORT_FORECAST_TAG]
                     periodSnowAccumulation = self.getPeriodSnowAccum(currPeriod)
                     dayMsg = "{}: {}F, {}, {}".format(periodName,periodTemp,periodShortForecast,periodSnowAccumulation)
                     msg += "" + dayMsg + "\n"
                 #add spacing between zone summaries if more than one zone
                 if len(self.zoneUrlMap.keys())>1:
                     msg+="\n"
+
+                zoneIdx+=1
 
             self.logger.warning("returning multiDay forecast from multiDay")
             return msg
