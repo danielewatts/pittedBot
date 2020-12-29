@@ -132,7 +132,24 @@ class Resort:
         else:
             self.logger.warning("returning error msg from getWeatherMsg method")
             return self.NOAA_ERROR_MESSAGE    
+        
+    def getPeriodSnowAccum(self,period):
+        detailedDescript = period[self.DETAILED_FORECAST_TAG]
+        # details = detailedDescript.split(".")
+        # for detail in details:
+        #     temp = detail
+        #     if temp.strip().startswith("New"):
+        #         return detail
 
+        try:
+            idx = detailedDescript.index("New")
+            return detailedDescript[idx::]
+        except ValueError:
+            return "No new snow"
+
+        
+
+            
     def getMultiPeriodMsg(self,desiredPeriods):
         if self.validNOAA:
             msg = ''
@@ -144,7 +161,7 @@ class Resort:
                     periodName = forecast[i][0] #returns a tuple (periodName, detailedDescript)
                     periodTemp = currPeriod[self.TEMPERATURE_TAG]
                     periodShortForecast = currPeriod[self.SHORT_FORECAST_TAG]
-                    periodSnowAccumulation = self.getPeriodSnowAccum()
+                    periodSnowAccumulation = self.getPeriodSnowAccum(currPeriod)
                     dayMsg = "{}: {}F, {}, {}".format(periodName,periodTemp,periodShortForecast,periodSnowAccumulation)
                     msg += "" + dayMsg + "\n"
                 #add spacing between zone summaries if more than one zone
@@ -158,17 +175,6 @@ class Resort:
             return self.NOAA_ERROR_MESSAGE 
       
 
-    def getPeriodShortForecast(self,periodIdx):
-        return self
-        pass
-
-    def getPeriodSnowAccum(self,period):
-        keyWords = set(period[])
-        pass
-
-    def getPeriodTemp(self):
-        pass
-   
 
 
 
