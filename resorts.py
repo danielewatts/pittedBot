@@ -158,17 +158,16 @@ class Resort:
             msg = ''
             zoneIdx = 0
             for zone in self.zoneUrlMap.keys():
-                # msg += "Area: " + self.name +", ZONE: " + str(zone) + elevation + "\n" 
                 elevation = self.elevationMapping[self.name][zoneIdx]
-                msg+= "Area: {}, Zone: {} at {}ft \n".format(self.name,str(zone),elevation)
+                msg+= "Area: {}, Zone: {} at {}ft \n".format(self.name,str(zone),elevation) 
                 forecast = self.periodForeCastData[zone]
                 for i in range(0,desiredPeriods):
                     currPeriod = self.forecastPeriods[zoneIdx][i]
                     periodName = forecast[i][0] #returns a tuple (periodName, detailedDescript)
                     periodTemp,periodShortForecast = currPeriod[self.TEMPERATURE_TAG],currPeriod[self.SHORT_FORECAST_TAG]
                     periodSnowAccumulation = self.getPeriodSnowAccum(currPeriod)
-                    dayMsg = "{}: {}F, {}, {}".format(periodName,periodTemp,periodShortForecast,periodSnowAccumulation)
-                    msg += "" + dayMsg + "\n"
+                    dayMsg =  "{}: {}F, {}, {}".format(periodName,periodTemp,periodShortForecast,periodSnowAccumulation)
+                    msg += dayMsg + "\n"
                 #add spacing between zone summaries if more than one zone
                 if len(self.zoneUrlMap.keys())>1:
                     msg+="\n"
