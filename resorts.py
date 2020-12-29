@@ -93,7 +93,7 @@ class Resort:
         #urlib might throw urllib.error.HTTPError
         #need to handle this so it doesn't bring server down
         try:
-            req = urllib.request.urlopen(url,timeout=3)
+            req = urllib.request.urlopen(url,timeout=5)
         except urllib.error.HTTPError:
             self.logger.warning("in urlib http error block")
             self.validNOAA = False
