@@ -94,8 +94,8 @@ class Resort:
         #need to handle this so it doesn't bring server down
         try:
             req = urllib.request.urlopen(url,timeout=5)
-        except urllib.error.HTTPError:
-            self.logger.warning("in urlib http error block")
+        except urllib.error.HTTPError as error:
+            self.logger.warning("in urlib http error block, ERROR INFO: {} ".format(error))
             self.validNOAA = False
             print("http error detected")
         except socket.timeout:
