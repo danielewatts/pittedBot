@@ -65,6 +65,11 @@ def smsReply():
     logger.warning("about to return sms to twillio ")
     return str(resp)
 
+# def localTest():
+#     skiArea = Resort('crystal')
+#     print(skiArea.getMultiPeriodMsg(3))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
+    # localTest()

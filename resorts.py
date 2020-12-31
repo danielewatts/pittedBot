@@ -7,11 +7,13 @@ Upon init all data will be populated, this will result in calling a utility clas
 """
 
 import json,re
-import urllib.request,socket #importing socket to handle socket timeouts 
+import urllib,socket #importing socket to handle socket timeouts 
+from urllib.request import Request,urlopen
 #importing logging and azure logging tools to detect possible http errors and report them to azure logging tools
 import logging 
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from collections import OrderedDict
+
 class Resort:
     #class instance logger for debugging purposes
     CONNECTION_STRING = 'InstrumentationKey=5143d3c6-3d1e-444f-a65d-7aac7c370e32;IngestionEndpoint=https://centralus-0.in.applicationinsights.azure.com/'
@@ -88,12 +90,14 @@ class Resort:
     #returns an array of the form [(name of period,detailedForecast)]
     def getZonePeriodData(self,zoneName):
         zonePeriodData = []
-        url = self.zoneUrlMap[zoneName]
+        noaaUrl = self.zoneUrlMap[zoneName]
         totalJsonData = None
-        #urlib might throw urllib.error.HTTPError
-        #need to handle this so it doesn't bring server down
         try:
-            req = urllib.request.urlopen(url,timeout=5)
+            req = Request(noaaUrl)
+            # req = urllib.request.urlopen(url,timeout=5)
+            # req.headers.add_header('Accept','application/vnd.noaa.dwml+json;version=1')
+            req.add_header('Accept','application/vnd.noaa.dwml+json;version=1')
+            response = urlopen(req)
         except urllib.error.HTTPError as error:
             self.logger.warning("in urlib http error block, ERROR INFO: {} ".format(error))
             self.validNOAA = False
@@ -103,7 +107,8 @@ class Resort:
             self.logger.warning("Socket TIMED OUT !!")
         else: #block here only runs if an exception is not thrown
             self.validNOAA = True
-            totalJsonData = json.load(req)
+            # totalJsonData = json.load(req)
+            totalJsonData = json.load(response)
             forecastingPeriod = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
             self.forecastPeriods.append(forecastingPeriod) 
             for period in forecastingPeriod:
