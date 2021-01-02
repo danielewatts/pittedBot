@@ -96,7 +96,8 @@ class Resort:
             req = Request(noaaUrl)
             # req = urllib.request.urlopen(url,timeout=5)
             # req.headers.add_header('Accept','application/vnd.noaa.dwml+json;version=1')
-            req.add_header('Accept','application/vnd.noaa.dwml+json;version=1')
+            # req.add_header('Accept','application/vnd.noaa.dwml+json;version=1')
+            req.add_header("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
             response = urlopen(req)
         except urllib.error.HTTPError as error:
             self.logger.warning("in urlib http error block, ERROR INFO: {} ".format(error))

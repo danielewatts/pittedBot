@@ -66,7 +66,7 @@ def smsReply():
     return str(resp)
 
 # def localTest():
-#     skiArea = Resort('crystal')
+#     skiArea = Resort('baker')
 #     print(skiArea.getMultiPeriodMsg(3))
 
 
