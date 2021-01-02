@@ -6,11 +6,9 @@ to fulfill information requests made by the user
 Upon init all data will be populated, this will result in calling a utility class to retrieve info from the json file ?.. perhaps
 """
 
-import json,re
-import urllib,socket #importing socket to handle socket timeouts 
-from urllib.request import Request,urlopen
-#importing logging and azure logging tools to detect possible http errors and report them to azure logging tools
-import logging 
+import logging
+from time import sleep
+from jsonutility import openLocalJson,getJsonResponseObj,NOAA_REQ_HEADER
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from collections import OrderedDict
 
@@ -38,6 +36,7 @@ class Resort:
     }
 
     #keys for json extraction, to avoid errors when typing
+    RESORTS_JSON_PATH = 'resorts.json'
     TEMPERATURE_TAG = 'temperature'
     SHORT_FORECAST_TAG = 'shortForecast'
     AREAS_TAG = "areas"
@@ -66,10 +65,8 @@ class Resort:
         zoneNameApiMap = OrderedDict()
         resortIndex = self.jsonResortIndexMap[resortName]
         # Opening JSON file 
-        resortsJsonFile = open('resorts.json')
-        # returns JSON object as  
         # a dictionary 
-        data = json.load(resortsJsonFile) 
+        data = openLocalJson(self.RESORTS_JSON_PATH)
         self.logger.warning("opened up json file")
         areaInfo = data[resortIndex][self.AREAS_TAG]
         for subAreaDict in areaInfo:
@@ -85,31 +82,27 @@ class Resort:
         for zone in self.zoneUrlMap.keys():
             self.periodForeCastData[zone] = self.getZonePeriodData(zone)
 
-
-    #method that extracts the desired forecasting data from a specific zone
-    #returns an array of the form [(name of period,detailedForecast)]
     def getZonePeriodData(self,zoneName):
         zonePeriodData = []
         noaaUrl = self.zoneUrlMap[zoneName]
         totalJsonData = None
-        try:
-            req = Request(noaaUrl)
-            # req = urllib.request.urlopen(url,timeout=5)
-            # req.headers.add_header('Accept','application/vnd.noaa.dwml+json;version=1')
-            # req.add_header('Accept','application/vnd.noaa.dwml+json;version=1')
-            req.add_header("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
-            response = urlopen(req)
-        except urllib.error.HTTPError as error:
-            self.logger.warning("in urlib http error block, ERROR INFO: {} ".format(error))
+        #try to get noaa API at 3 times
+        attempts,maxAttempts = 0,3
+        for i in range(0,maxAttempts):
+            totalJsonData = getJsonResponseObj(noaaUrl,NOAA_REQ_HEADER[0],NOAA_REQ_HEADER[1])
+            if totalJsonData:
+                #we have a json response object, now we can break out of this
+                attempts = i+1
+                break
+            #NOAA api not cooperating, wait a bit then retest
+            sleep(1)
+        
+        if totalJsonData is None:
             self.validNOAA = False
-            print("http error detected")
-        except socket.timeout:
-            self.validNOAA = False
-            self.logger.warning("Socket TIMED OUT !!")
-        else: #block here only runs if an exception is not thrown
+            self.logger.warning("was not able to get NOAA after: {} attempts".format(maxAttempts))
+        else:
             self.validNOAA = True
-            # totalJsonData = json.load(req)
-            totalJsonData = json.load(response)
+            self.logger.warning("got NOAA info after {} attempts".format(attempts))
             forecastingPeriod = totalJsonData[self.PROPERTIES_TAG][self.PERIODS_TAG]
             self.forecastPeriods.append(forecastingPeriod) 
             for period in forecastingPeriod:
@@ -119,9 +112,8 @@ class Resort:
                 zonePeriodData.append((nameOfPeriod,detailedForecastDescript))
             
             self.logger.warning("loaded up zone period data")
-                
+        
         return zonePeriodData
-    
 
     #method for generating the forecast summary msg
     def getWeatherMsg(self):
@@ -155,9 +147,6 @@ class Resort:
             return detailedDescript[idx::]
         except ValueError:
             return "No new snow"
-
-        
-
             
     def getMultiPeriodMsg(self,desiredPeriods):
         if self.validNOAA:
