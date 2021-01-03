@@ -40,7 +40,7 @@ def cleanedBodySMS(sms):
 
 def getAllAreasReport(desiredPeriods):
     report = ''
-    skiResorts = [skiResort for skiResort in resortMapping['all']]
+    skiResorts = [Resort(skiResort) for skiResort in resortMapping['all']]
     #created list of all ski resort objects
     for skiArea in skiResorts:
         report += skiArea.getMultiPeriodMsg(desiredPeriods)
